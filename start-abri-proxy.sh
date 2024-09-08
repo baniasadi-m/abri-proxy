@@ -53,7 +53,18 @@ delete_dns_iptables_rules() {
     else
         echo "Rule does not exist in OUTPUT chain."
     fi
-    
+
+    if iptables -C DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+        iptables -D DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT
+    else
+        echo "Rule does not exist in DOCKER-USER chain."
+    fi
+    # Check if the rule exists before trying to remove it
+    if iptables -C DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+        iptables -D DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT
+    else
+        echo "Rule does not exist in DOCKER-USER chain."
+    fi 
   done < "$ip_file"
 
   # Block all other IP addresses for DNS queries
@@ -86,8 +97,31 @@ delete_dns_iptables_rules() {
     else
         echo "Rule does not exist in OUTPUT chain."
     fi
-   
-  echo "iptables rules updated successfully."
+
+    # Check if the rule exists before trying to remove it
+    if iptables -C DOCKER-USER -p udp --dport 53 -j DROP 2>/dev/null; then
+        iptables -D DOCKER-USER -p udp --dport 53 -j DROP  
+    else
+        echo "Rule does not exist in DOCKER-USER chain."
+    fi
+
+    # Check if the rule exists before trying to remove it
+    if iptables -C DOCKER-USER -p tcp --dport 53 -j DROP 2>/dev/null; then
+        iptables -D DOCKER-USER -p tcp --dport 53 -j DROP
+        
+    else
+        echo "Rule does not exist in DOCKER-USER chain."
+    fi
+
+    if iptables -C DOCKER-USER -j RETURN 2>/dev/null; then
+        echo "iptables rules updated successfully."
+        
+    else
+        iptables -A DOCKER-USER -j RETURN
+        echo "iptables rules updated successfully."
+    fi
+    
+  
 }
 
 
@@ -149,7 +183,18 @@ add_dns_iptables_rules() {
     else
         iptables -A OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT
     fi
-    
+
+    if iptables -C DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+        echo "Rule exists"
+    else
+        iptables -I DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT
+    fi
+    # Check if the rule exists before trying to remove it
+    if iptables -C DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+        echo "Rule exists"
+    else
+        iptables -I DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT
+    fi
   done < "$ip_file"
 
   # Block all other IP addresses for DNS queries
@@ -184,7 +229,30 @@ add_dns_iptables_rules() {
     else
         iptables -A OUTPUT -p tcp --dport 53 -j DROP
     fi
-  echo "iptables rules updated successfully."
+
+    # Check if the rule exists before trying to remove it
+    if iptables -C DOCKER-USER -p udp --dport 53 -j DROP 2>/dev/null; then
+        echo "Rule exist in OUTPUT chain."  
+    else
+        iptables -A DOCKER-USER -p udp --dport 53 -j DROP
+    fi
+
+    # Check if the rule exists before trying to remove it
+    if iptables -C DOCKER-USER -p tcp --dport 53 -j DROP 2>/dev/null; then
+        echo "Rule exist in OUTPUT chain."
+        
+    else
+        iptables -A DOCKER-USER -p tcp --dport 53 -j DROP
+    fi
+
+    if iptables -C DOCKER-USER -j RETURN 2>/dev/null; then
+        iptables -D DOCKER-USER -j RETURN
+        echo "iptables rules updated successfully."
+        
+    else
+        
+        echo "iptables rules updated successfully."
+    fi
 }
 
 
@@ -258,6 +326,10 @@ show_help() {
     echo "  -n <nginx config path>   example: ./nginx/nginx.conf"
     echo "  -d  remove all configs and services"
 }
+#########################################################################
+#########################################################################
+#########################################################################
+
 
 # Check if no arguments are provided
 if [ $# -eq 0 ]; then
@@ -321,6 +393,8 @@ if [ $? -eq 0 ]; then
 else
   echo "OK! Port 53 is FREE."
 fi
+
+iptables-save > ./.iptables-before-run-services$(date +%s).rules
 
 add_dns_iptables_rules $WHITELIST_IPS
 
