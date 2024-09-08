@@ -33,14 +33,14 @@ add_dns_iptables_rules() {
     
     # Add iptables rules for both UDP and TCP on port 53
     echo "Adding iptables rule for IP: $ip"
-    iptables -A DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT
-    iptables -A DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT
+    iptables -I DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT
+    iptables -I DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT
   done < "$ip_file"
 
   # Block all other IP addresses for DNS queries
   echo "Blocking all other IP addresses from accessing port $dns_port"
-  iptables -A DOCKER-USER -p udp --dport $dns_port -j DROP
-  iptables -A DOCKER-USER -p tcp --dport $dns_port -j DROP
+  iptables -I DOCKER-USER -p udp --dport $dns_port -j DROP
+  iptables -I DOCKER-USER -p tcp --dport $dns_port -j DROP
 
   echo "iptables rules updated successfully."
 }
