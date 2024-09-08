@@ -26,11 +26,13 @@ add_dns_iptables_rules() {
     exit 1
   fi
 
+  iptables -I DOCKER-USER -p udp --dport $dns_port -j DROP
+  iptables -I DOCKER-USER -p tcp --dport $dns_port -j DROP
   # Loop through each IP address in the file
   while IFS= read -r ip; do
     # Skip empty lines
     [[ -z "$ip" ]] && continue
-    
+
     # Add iptables rules for both UDP and TCP on port 53
     echo "Adding iptables rule for IP: $ip"
     iptables -I DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT
@@ -39,8 +41,6 @@ add_dns_iptables_rules() {
 
   # Block all other IP addresses for DNS queries
   echo "Blocking all other IP addresses from accessing port $dns_port"
-  iptables -I DOCKER-USER -p udp --dport $dns_port -j DROP
-  iptables -I DOCKER-USER -p tcp --dport $dns_port -j DROP
 
   echo "iptables rules updated successfully."
 }
@@ -117,7 +117,7 @@ add_dns_iptables_rules $WHITELIST_IPS
 
 update_nginx_whitelist $WHITELIST_IPS $NGINX_CONFIG
 
-systemctl stop systemd-resolved
+#systemctl stop systemd-resolved
 
 
 echo "changing domains address configured for this proxy"
