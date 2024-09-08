@@ -15,13 +15,13 @@ services:
       - "HTTP_PASS=masoud"
     volumes:
       - ./dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf
-      - ./dnsmasq/proxy.conf:/etc/dnsmasq.d/proxy.conf
+      - ./dnsmasq/domains.conf:/etc/dnsmasq.d/domains.conf
     ports:
       - "53:53/udp"
       - "5380:8080"
     cap_add:
       - NET_ADMIN
-      
+
   nginx-proxy:
     image: nginx:latest
     container_name: abri-nginx
