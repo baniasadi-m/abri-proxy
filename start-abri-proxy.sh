@@ -41,18 +41,18 @@ delete_dns_iptables_rules() {
 
 
     # Check if the rule exists before trying to remove it
-    if iptables -C OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
-        iptables -D OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT
-    else
-        echo "Rule does not exist in OUTPUT chain."
-    fi
+    # if iptables -C OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+    #     iptables -D OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT
+    # else
+    #     echo "Rule does not exist in OUTPUT chain."
+    # fi
 
-    # Check if the rule exists before trying to remove it
-    if iptables -C OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
-        iptables -D OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT
-    else
-        echo "Rule does not exist in OUTPUT chain."
-    fi
+    # # Check if the rule exists before trying to remove it
+    # if iptables -C OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+    #     iptables -D OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT
+    # else
+    #     echo "Rule does not exist in OUTPUT chain."
+    # fi
 
     if iptables -C DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
         iptables -D DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT
@@ -64,7 +64,8 @@ delete_dns_iptables_rules() {
         iptables -D DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT
     else
         echo "Rule does not exist in DOCKER-USER chain."
-    fi 
+    fi
+     
   done < "$ip_file"
 
   # Block all other IP addresses for DNS queries
@@ -85,18 +86,18 @@ delete_dns_iptables_rules() {
 
 
     # Check if the rule exists before trying to remove it
-    if iptables -C OUTPUT -p udp --dport 53 -j DROP 2>/dev/null; then
-        iptables -D OUTPUT -p udp --dport 53 -j DROP
-    else
-        echo "Rule does not exist in OUTPUT chain."
-    fi
+    # if iptables -C OUTPUT -p udp --dport 53 -j DROP 2>/dev/null; then
+    #     iptables -D OUTPUT -p udp --dport 53 -j DROP
+    # else
+    #     echo "Rule does not exist in OUTPUT chain."
+    # fi
 
-    # Check if the rule exists before trying to remove it
-    if iptables -C OUTPUT -p tcp --dport 53 -j DROP 2>/dev/null; then
-        iptables -D OUTPUT -p tcp --dport 53 -j DROP
-    else
-        echo "Rule does not exist in OUTPUT chain."
-    fi
+    # # Check if the rule exists before trying to remove it
+    # if iptables -C OUTPUT -p tcp --dport 53 -j DROP 2>/dev/null; then
+    #     iptables -D OUTPUT -p tcp --dport 53 -j DROP
+    # else
+    #     echo "Rule does not exist in OUTPUT chain."
+    # fi
 
     # Check if the rule exists before trying to remove it
     if iptables -C DOCKER-USER -p udp --dport 53 -j DROP 2>/dev/null; then
@@ -109,6 +110,12 @@ delete_dns_iptables_rules() {
     if iptables -C DOCKER-USER -p tcp --dport 53 -j DROP 2>/dev/null; then
         iptables -D DOCKER-USER -p tcp --dport 53 -j DROP
         
+    else
+        echo "Rule does not exist in DOCKER-USER chain."
+    fi
+
+    if iptables -C DOCKER-USER -p udp --dport $dns_port -s 192.168.12.0/24 -j ACCEPT 2>/dev/null; then
+        iptables -D DOCKER-USER -p udp --dport $dns_port -s 192.168.12.0/24  -j ACCEPT
     else
         echo "Rule does not exist in DOCKER-USER chain."
     fi
@@ -171,18 +178,18 @@ add_dns_iptables_rules() {
     fi
 
     # Check if the rule exists before trying to remove it
-    if iptables -C OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
-        echo "Rule exists"
-    else
-        iptables -A OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT
-    fi
+    # if iptables -C OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+    #     echo "Rule exists"
+    # else
+    #     iptables -A OUTPUT -p udp --dport $dns_port -s "$ip" -j ACCEPT
+    # fi
 
-    # Check if the rule exists before trying to remove it
-    if iptables -C OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
-        echo "Rule exists"
-    else
-        iptables -A OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT
-    fi
+    # # Check if the rule exists before trying to remove it
+    # if iptables -C OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
+    #     echo "Rule exists"
+    # else
+    #     iptables -A OUTPUT -p tcp --dport $dns_port -s "$ip" -j ACCEPT
+    # fi
 
     if iptables -C DOCKER-USER -p udp --dport $dns_port -s "$ip" -j ACCEPT 2>/dev/null; then
         echo "Rule exists"
@@ -194,6 +201,12 @@ add_dns_iptables_rules() {
         echo "Rule exists"
     else
         iptables -I DOCKER-USER -p tcp --dport $dns_port -s "$ip" -j ACCEPT
+    fi
+
+    if iptables -C DOCKER-USER -p udp --dport $dns_port -s 192.168.12.0/24 -j ACCEPT 2>/dev/null; then
+        echo "Rule exists"
+    else
+        iptables -I DOCKER-USER -p udp --dport $dns_port -s 192.168.12.0/24  -j ACCEPT
     fi
   done < "$ip_file"
 
