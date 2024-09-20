@@ -3,7 +3,9 @@
 
 WHITELIST_IPS="./whitelist/ips.txt"
 NGINX_CONFIG="./nginx/nginx.conf"
+NGINX_WHITELIST_CONFIG="./nginx/allowed_ips.conf"
 
+touch $NGINX_WHITELIST_CONFIG
 
 delete_dns_iptables_rules() {
   local ip_file=$1
@@ -297,7 +299,7 @@ update_nginx_whitelist() {
     allow_ips+="\t\tdeny all;\n"
 
     # Replace the placeholder in the Nginx config with allow directives
-    sed -i "/$placeholder/c\\$allow_ips" "$nginx_config"
+    printf "%b" "$allow_ips" > $NGINX_WHITELIST_CONFIG
 
 }
 
